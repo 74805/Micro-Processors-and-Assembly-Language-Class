@@ -2,9 +2,50 @@
 
 .data
 result dw ?
+input_arr dw 30233, 1246, 42
+inputLen EQU 3
 
 .stack 100h
 .code
+
+arrGCD proc
+	; save registers
+		push ax
+		push bx
+
+		; if there is only one element in the array then return it
+		cmp cx, 1 
+		jne notOne
+		mov bx, input_arr[0]
+		mov result, bx
+
+		jmp return
+
+		; else return recGCD(input_arr[0], arrGCD(input_arr[1..inputLen]))
+		notOne:
+			push cx
+			dec cx
+			mov bx, cx ; bx = current index
+			call arrGCD
+			pop cx
+
+			mov ax, 2
+			push dx ; save dx (because mul uses dx)
+			mul bx ; ax = 2 * current index (because each word is 2 bytes)
+			pop dx
+			mov bx, ax
+			mov ax, input_arr[bx] ; ax = input_arr[current index]
+			mov bx, result ; bx = arrGCD(0, ... , current index - 1)
+			call recGCD
+
+		return:
+			; restore registers
+			pop bx
+			pop ax
+
+			ret
+	
+arrGCD endp 
 
 recGCD proc
 	; save registers
@@ -17,7 +58,7 @@ recGCD proc
 	jne notZero
 	mov result, ax
 
-	jmp return
+	jmp return2
 
 	; else return recGCD(bx, ax % bx)
 	notZero:
@@ -27,12 +68,13 @@ recGCD proc
 		mov bx, dx ; bx = ax % bx
 		call recGCD
 
-	return:
+	return2:
 		; restore registers
 		pop bx
 		pop ax
 		pop dx
 
+		mov dx, result
 		ret
 
 recGCD endp
@@ -44,7 +86,10 @@ START:
 	mov ax, 17325
 	mov bx, 27456
 
-	call recGCD
+	push cx
+	mov cx, inputLen
+	call arrGCD
+	pop cx
 
 	; print result
 	; set extra segment to screen

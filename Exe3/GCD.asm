@@ -10,6 +10,7 @@ recGCD proc
 	; save registers
 	push ax
 	push bx
+	push dx
 
 	; if bx == 0 return ax
 	cmp bx, 0
@@ -30,6 +31,7 @@ recGCD proc
 		; restore registers
 		pop bx
 		pop ax
+		pop dx
 
 		ret
 

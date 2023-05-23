@@ -91,11 +91,6 @@ START:
 	call arrGCD
 	pop cx
 
-	; print result
-	; set extra segment to screen
-	mov bx, 0B800h
-	mov es, bx
-
 	; return to OS
 	mov ax, 4C00h
 	int 21h

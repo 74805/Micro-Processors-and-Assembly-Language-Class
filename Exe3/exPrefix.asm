@@ -1,11 +1,46 @@
 .model small
 
 .data
+saveAx dw ?
+saveBx dw ?
 
 .stack 100h
 .code
 
-proc numPrefix
+numPrefix proc 
+    mov saveBx, bx
+
+    pop bx ; the instruction pointer of the caller
+
+    mov saveAx, ax
+
+    pop ax
+    push bx
+    call printDecimal
+
+    push dx
+    push si
+    add si, 160 ; Move to next line
+
+    mov bx, 10
+    xor dx, dx
+    div bx ; Remove the last digit
+    cmp ax, 0
+    je numPrefixEnd ; Done if the number is zero
+
+    mov bx, saveAx
+
+    push ax ; Push the remaining number back
+    call numPrefix
+
+    mov saveAx, bx
+    
+    numPrefixEnd:
+        pop si
+        pop dx
+        mov bx, saveBx
+        mov ax, saveAx
+        ret
 
 numPrefix endp
 
@@ -14,6 +49,7 @@ printDecimal proc
     push bx
     push cx
     push dx
+    push si
 
     ; Check if the number is zero
     mov cx, 0 ; Digit counter
@@ -43,6 +79,7 @@ printDecimal proc
     loop printLoop
 
     printDecimalEnd:
+        pop si
         pop dx
         pop cx
         pop bx
@@ -55,18 +92,19 @@ START:
 	mov ax, @data ; Set up the data segment
 	mov ds, ax
 
-	push 3257
-
-    pop ax
-    ; set extra segment to screen
+     ; set extra segment to screen
 	mov bx, 0B800h
 	mov es, bx
-	
-	mov si, 0
-	call printDecimal
 
-	; return to OS
-	mov ax, 4C00h
-	int 21h
+
+    mov ax, 3257h
+	push ax
+
+    mov si, 3000
+    call numPrefix
+    
+    ; return to OS
+    mov ax, 4C00h
+    int 21h
 
 END START

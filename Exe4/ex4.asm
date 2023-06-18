@@ -4,7 +4,7 @@
 	rows db 25
 	columns db 80
 
-	last_location db 0
+	last_location dw ?
 
 .stack 100h
 .code
@@ -35,9 +35,8 @@ Print_Symbol proc uses ax bx cx dx di
 	mov cx, 160 ; Number of bytes per row
     mul cx 
 	
-    xor di, di
+    mov di, word ptr columns ; Add the offset for half of the columns (halp of the columns * 2 bytes per column)
 	add di, ax ; Add the offset for half of the rows
-	add di, 80 ; Add the offset for half of the columns
 
     ; Print 'O' with red foreground color on black background
     mov byte ptr es:[di], 'O'

@@ -92,7 +92,7 @@ START:
 	mov ax, @data ; Set up the data segment
 	mov ds, ax
 
-     ; set extra segment to screen
+    ; set extra segment to screen
 	mov bx, 0B800h
 	mov es, bx
 

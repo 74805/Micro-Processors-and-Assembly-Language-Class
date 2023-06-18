@@ -17,6 +17,11 @@ Print_Screen_Black proc uses ax bx cx dx
     ret
 Print_Screen_Black endp
 
+Print_Symbol proc
+    ; Print red 'o' in the middle of the screen as the symbol
+
+Print_Symbol endp
+
 START:
     .startup
 
@@ -24,6 +29,8 @@ START:
 	mov ds, ax
 
     call Print_Screen_Black
+
+    call Print_Symbol
 
     .exit
 end START

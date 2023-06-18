@@ -4,6 +4,8 @@
 	rows db 25
 	columns db 80
 
+	last_location db 0
+
 .stack 100h
 .code
 
@@ -40,6 +42,8 @@ Print_Symbol proc uses ax bx cx dx di
     ; Print 'O' with red foreground color on black background
     mov byte ptr es:[di], 'O'
     mov byte ptr es:[di + 1], 4h ; Attribute for red foreground color on black background
+
+	mov last_location, di
 
     ret
 Print_Symbol endp

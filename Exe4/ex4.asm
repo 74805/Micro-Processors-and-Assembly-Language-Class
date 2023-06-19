@@ -62,19 +62,19 @@ Wait_For_Keypress proc uses ax bx dx di
 
 	in al, 60h ; Get keyboard data
 
-	cmp al, 9Eh ; a
+	cmp al, 1Eh;9Eh ; a
 	je Move_Left
 
-	cmp al, 0A0h ; d
+	cmp al, 20h ;0A0h ; d
 	je Move_Right
 
-	cmp al, 91h ; w
+	cmp al, 11h;91h ; w
 	je Move_Up
 
-	cmp al, 9Fh ; s
+	cmp al, 1Fh;9Fh ; s
 	je Move_Down
 
-	cmp al, 90h ; q
+	cmp al, 10h;90h ; q
 	je Quit
 
 	jmp Wait_For_Keypress
@@ -171,15 +171,17 @@ Wait_For_Keypress proc uses ax bx dx di
         ; Check if the point was captured
 		mov bx, last_point_location
         cmp ax, bx
-        je Generate_X
+        jne Loop1
 
-        jmp Loop1
+		call Generate_X
+
+		jmp Loop1
 
     Quit:
         ret
 Wait_For_Keypress endp
 
-Generate_X proc uses ax bx di
+Generate_X proc uses ax bx dx di
     ; Get random number using the system clock
 	Loop2:
 		; Read seconds
@@ -200,12 +202,10 @@ Generate_X proc uses ax bx di
 		mov ax, bx
 		mov bl, normal_factor
 		mov bh, 0
-		push dx
 		mov dx, 0
 		div bx
-		pop dx
 		mov bx, ax
-		and bx, 0FFFEh ; Make sure the number is even
+		add bx, bx
 
 		cmp bx, last_point_location
 		je Loop2
@@ -213,9 +213,9 @@ Generate_X proc uses ax bx di
 		; Calculate the screen size
 		mov al, rows
 		mov ah, 0
-		mov cl, columns
-		add cl, cl ; Multiply by 2 to get the number of bytes per column
-		mul cl
+		mov dl, columns
+		add dl, dl ; Multiply by 2 to get the number of bytes per row
+		mul dl
 
 		; Check if the point exceeds the screen
 		cmp bx, ax
@@ -252,7 +252,6 @@ START:
     mov al, rows
     mov ah, 0
     mov cl, columns
-    add cl, cl ; Multiply by 2 to get the number of bytes per column
     mul cl
     mov bx, ax
 

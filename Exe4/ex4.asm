@@ -5,6 +5,7 @@
 	columns db 80
 
 	last_location dw ?
+    last_point_location dw ?
 
     normal_factor db ?
 
@@ -167,6 +168,10 @@ Wait_For_Keypress proc uses ax bx dx di
 		; Update the last location
 		mov last_location, ax
 
+        ; Check if the point was captured
+        cmp ax, last_point_location
+        je Generate_X
+
         jmp Loop1
 
     Quit:
@@ -215,6 +220,9 @@ Generate_X proc uses ax bx di
 	mov di, bx
 	mov byte ptr es:[di], 'X'
 	mov byte ptr es:[di + 1], 4h ; Attribute for red foreground color on black background
+
+    ; Update the last location
+    mov last_point_location, di
 
     ret
 Generate_X endp

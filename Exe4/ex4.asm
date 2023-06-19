@@ -9,6 +9,11 @@
 
     normal_factor db ?
 
+	score db 0
+	score_a_msg db 'Score is A:  ', '$'
+	score_b_msg db 'Score is B:  ', '$'
+	score_c_msg db 'Score is C:  ', '$'
+
 .stack 1000h
 .code
 
@@ -173,11 +178,14 @@ Wait_For_Keypress proc uses ax bx dx di
         cmp ax, bx
         jne Loop1
 
+		; Update the score
+		inc score
 		call Generate_X
 
 		jmp Loop1
 
     Quit:
+		call Print_Score
         ret
 Wait_For_Keypress endp
 
@@ -207,7 +215,7 @@ Generate_X proc uses ax bx dx di
 		mov bx, ax
 		add bx, bx
 
-		cmp bx, last_point_location
+		cmp bx, last_location
 		je Loop2
 
 		; Calculate the screen size
@@ -231,6 +239,54 @@ Generate_X proc uses ax bx dx di
 
     ret
 Generate_X endp
+
+Print_Score proc uses ax dx si
+	mov ax, 0 
+    mov al, score
+
+	cmp al, 10d
+	jge Print_C
+
+	cmp al, 5d
+	jge Print_B
+
+	Print_A:
+		add al, 30h ; ASCII
+
+		; Move the score into the message
+		mov si, offset score_a_msg + 12
+		mov [si], al
+
+		mov dx, offset score_a_msg
+		jmp Print_Score_Message
+
+	Print_B:
+		add al, 30h ; ASCII
+
+		; Move the score into the message
+		mov si, offset score_b_msg + 12
+		mov [si], al
+
+		mov dx, offset score_b_msg
+		jmp Print_Score_Message
+
+	Print_C:
+		add al, 30h ; ASCII
+
+		; Move the score into the message
+		mov si, offset score_c_msg + 12
+		mov [si], al
+
+		mov dx, offset score_c_msg
+		jmp Print_Score_Message
+
+	Print_Score_Message:
+		; Print the score message
+		mov ah, 09h
+		int 21h
+
+	ret
+Print_Score endp
 
 
 START:

@@ -6,7 +6,7 @@
 
 	last_location dw ?
 
-.stack 100h
+.stack 1000h
 .code
 
 Print_Screen_Black proc uses ax bx cx dx
@@ -26,7 +26,7 @@ Print_Screen_Black proc uses ax bx cx dx
     ret
 Print_Screen_Black endp
 
-Print_Symbol proc uses ax bx cx dx di
+Print_Symbol proc uses ax bx cx di
     ; Print red 'o' in the middle of the screen as the symbol
     mov bx, 80 ; Number of columns
     shr bx, 1 ; Divide by 2
@@ -38,7 +38,6 @@ Print_Symbol proc uses ax bx cx dx di
     mov di, word ptr columns ; Add the offset for half of the columns (halp of the columns * 2 bytes per column)
 	add di, ax ; Add the offset for half of the rows
 
-    ; Print 'O' with red foreground color on black background
     mov byte ptr es:[di], 'O'
     mov byte ptr es:[di + 1], 4h ; Attribute for red foreground color on black background
 
@@ -46,6 +45,77 @@ Print_Symbol proc uses ax bx cx dx di
 
     ret
 Print_Symbol endp
+
+Wait_For_Keypress proc uses ax bx dx di
+	Loop1:
+		in al, 64h
+		test al, 01
+		jz Loop1
+
+	in al, 60h ; Get keyboard data
+
+	cmp al, 1Eh ; a
+	je Move_Left
+
+	cmp al, 20h ; d
+	je Move_Right
+
+	cmp al, 11h ; w
+	je Move_Up
+
+	cmp al, 1Fh ; s
+	je Move_Down
+
+	cmp al, 71h ; q
+	je Quit
+
+	jmp Wait_For_Keypress
+
+    Move_Left:
+        ; Print the symbol to the left
+		mov di, last_location
+		
+		; Check if the symbol is already at the leftmost column
+		mov bl, columns
+		add bl, bl
+		mov ax, di
+		div bl 
+		cmp ah, 0 ; Check if the remainder is 0
+		je Loop1
+
+		; Move the symbol to the left
+		sub di, 2
+
+		jmp Move
+
+    Move_Right:
+        ; Handle the logic for moving right
+        jmp Loop1
+
+    Move_Up:
+        ; Handle the logic for moving up
+        jmp Loop1
+
+    Move_Down:
+        ; Handle the logic for moving down
+        jmp Loop1
+
+	Move:	
+		mov byte ptr es:[di], 'O'
+		mov byte ptr es:[di + 1], 4h ; Attribute for red foreground color on black background
+
+		; Delete the symbol from the previous location
+		mov byte ptr es:[di + 2], ' '
+
+		; Update the last location
+		mov last_location, di
+
+        jmp Loop1
+
+    Quit:
+        ret
+Wait_For_Keypress endp
+
 
 START:
     .startup
@@ -60,6 +130,11 @@ START:
     call Print_Screen_Black
 
     call Print_Symbol
+
+	in al, 21h
+	or al, 02h
+	out 21h, al
+	call Wait_For_Keypress
 
     .exit
 end START

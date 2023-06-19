@@ -6,6 +6,8 @@
 
 	last_location dw ?
 
+    normal_factor db ?
+
 .stack 1000h
 .code
 
@@ -188,10 +190,14 @@ Generate_X proc uses ax bx di
 
 		mov bl, al ; Save minutes in bl
 
-		; Devide by 6 to get a better distribution
+		; Devide by the normal factor to get a better distribution
 		mov ax, bx
-		mov bx, 6d
+		mov bl, normal_factor
+		mov bh, 0
+		push dx
+		mov dx, 0
 		div bx
+		pop dx
 		mov bx, ax
 
 		; Calculate the screen size
@@ -227,6 +233,23 @@ START:
     call Print_Screen_Black
 
     call Print_Symbol
+
+    ; Calculate the normal factor
+    ; Screen size:
+    mov al, rows
+    mov ah, 0
+    mov cl, columns
+    add cl, cl ; Multiply by 2 to get the number of bytes per column
+    mul cl
+    mov bx, ax
+
+    ; seconds:minutes range:
+    mov ax, 5959h
+
+    ; normal factor = screen size / seconds:minutes range
+	mov dx, 0
+    div bx
+    mov normal_factor, al
 
 	call Generate_X
 

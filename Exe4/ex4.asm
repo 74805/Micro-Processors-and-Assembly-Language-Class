@@ -49,24 +49,24 @@ Print_Symbol endp
 Wait_For_Keypress proc uses ax bx dx di
 	Loop1:
 		in al, 64h
-		test al, 80h 
+		test al, 01h
 		jz Loop1
 
 	in al, 60h ; Get keyboard data
 
-	cmp al, 1Eh ; a
+	cmp al, 9Eh ; a
 	je Move_Left
 
-	cmp al, 20h ; d
+	cmp al, 0A0h ; d
 	je Move_Right
 
-	cmp al, 11h ; w
+	cmp al, 91h ; w
 	je Move_Up
 
-	cmp al, 1Fh ; s
+	cmp al, 9Fh ; s
 	je Move_Down
 
-	cmp al, 71h ; q
+	cmp al, 90h ; q
 	je Quit
 
 	jmp Wait_For_Keypress
@@ -185,6 +185,10 @@ START:
 	or al, 02h
 	out 21h, al
 	call Wait_For_Keypress
+
+	in al, 21h
+	and al, 0FDh
+	out 21h, al
 
     .exit
 end START

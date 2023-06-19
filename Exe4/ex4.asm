@@ -49,7 +49,7 @@ Print_Symbol endp
 Wait_For_Keypress proc uses ax bx dx di
 	Loop1:
 		in al, 64h
-		test al, 01
+		test al, 80h 
 		jz Loop1
 
 	in al, 60h ; Get keyboard data

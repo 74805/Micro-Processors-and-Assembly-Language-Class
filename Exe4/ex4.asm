@@ -169,7 +169,8 @@ Wait_For_Keypress proc uses ax bx dx di
 		mov last_location, ax
 
         ; Check if the point was captured
-        cmp ax, last_point_location
+		mov bx, last_point_location
+        cmp ax, bx
         je Generate_X
 
         jmp Loop1
@@ -204,6 +205,10 @@ Generate_X proc uses ax bx di
 		div bx
 		pop dx
 		mov bx, ax
+		and bx, 0FFFEh ; Make sure the number is even
+
+		cmp bx, last_point_location
+		je Loop2
 
 		; Calculate the screen size
 		mov al, rows

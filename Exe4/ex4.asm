@@ -28,11 +28,16 @@ Print_Screen_Black endp
 
 Print_Symbol proc uses ax bx cx di
     ; Print red 'o' in the middle of the screen as the symbol
-    mov bx, 80 ; Number of columns
+    mov bl, columns ; Number of columns
+	mov bh, 0
+	mov cx, bx
     shr bx, 1 ; Divide by 2
-    mov ax, 25 ; Number of rows
+
+    mov al, rows ; Number of rows
+	mov ah, 0
     shr ax, 1 ; Divide by 2 to get half of the rows
-	mov cx, 160 ; Number of bytes per row
+
+	add cx, cx ; Number of bytes per row
     mul cx 
 	
     mov di, word ptr columns ; Add the offset for half of the columns (halp of the columns * 2 bytes per column)
@@ -166,6 +171,48 @@ Wait_For_Keypress proc uses ax bx dx di
         ret
 Wait_For_Keypress endp
 
+Generate_X proc uses ax bx di
+    ; Get random number using the system clock
+	Loop2:
+		; Read seconds
+		mov al, 0h
+		out 70h, al
+		in al, 71h
+
+		mov bh, al ; Save seconds in bh
+
+		; Read minutes
+		mov al, 02h
+		out 70h, al
+		in al, 71h
+
+		mov bl, al ; Save minutes in bl
+
+		; Devide by 6 to get a better distribution
+		mov ax, bx
+		mov bx, 6d
+		div bx
+		mov bx, ax
+
+		; Calculate the screen size
+		mov al, rows
+		mov ah, 0
+		mov cl, columns
+		add cl, cl ; Multiply by 2 to get the number of bytes per column
+		mul cl
+
+		; Check if the point exceeds the screen
+		cmp bx, ax
+		jge Loop2
+
+	; Print X at the random location
+	mov di, bx
+	mov byte ptr es:[di], 'X'
+	mov byte ptr es:[di + 1], 4h ; Attribute for red foreground color on black background
+
+    ret
+Generate_X endp
+
 
 START:
     .startup
@@ -180,6 +227,8 @@ START:
     call Print_Screen_Black
 
     call Print_Symbol
+
+	call Generate_X
 
 	in al, 21h
 	or al, 02h

@@ -107,8 +107,24 @@ Wait_For_Keypress proc uses ax bx dx di
         jmp Move
 
     Move_Up:
-        ; Handle the logic for moving up
-        jmp Loop1
+        ; Print the symbol to the right
+        mov di, last_location
+
+        ; Check if the symbol is already at the rightmost column
+        mov bl, columns
+		add bl, bl
+        mov ax, di
+        div bl
+        cmp al, 0 ; Check if the symbol is already at the topmost row
+        je Loop1
+
+        ; Move the symbol to the right
+        mov bl, columns
+		mov bh, 0
+        add bl, bl
+        sub di, bx
+
+        jmp Move
 
     Move_Down:
         ; Handle the logic for moving down

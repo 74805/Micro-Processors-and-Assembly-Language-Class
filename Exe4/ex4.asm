@@ -89,8 +89,22 @@ Wait_For_Keypress proc uses ax bx dx di
 		jmp Move
 
     Move_Right:
-        ; Handle the logic for moving right
-        jmp Loop1
+        ; Print the symbol to the right
+        mov di, last_location
+
+        ; Check if the symbol is already at the rightmost column
+        mov bl, columns
+        add bl, bl
+        mov ax, di
+        div bl
+		sub bl, 2
+        cmp ah, bl
+        je Loop1
+
+        ; Move the symbol to the right
+        add di, 2
+
+        jmp Move
 
     Move_Up:
         ; Handle the logic for moving up
@@ -105,10 +119,12 @@ Wait_For_Keypress proc uses ax bx dx di
 		mov byte ptr es:[di + 1], 4h ; Attribute for red foreground color on black background
 
 		; Delete the symbol from the previous location
-		mov byte ptr es:[di + 2], ' '
+		mov ax, di
+		mov di, last_location
+		mov byte ptr es:[di], ' '
 
 		; Update the last location
-		mov last_location, di
+		mov last_location, ax
 
         jmp Loop1
 

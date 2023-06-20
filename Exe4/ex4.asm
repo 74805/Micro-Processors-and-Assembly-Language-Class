@@ -65,6 +65,28 @@ Print_Symbol proc uses ax bx cx di
     ret
 Print_Symbol endp
 
+; Update_Last_Key checks if the key pressed is one of the arrow keys and updates the last_key variable
+Update_Last_Key proc
+	; Pressed key is stored in al
+	cmp al, 9Eh ; a
+	je Key_Found
+
+	cmp al, 0A0h ; d
+	je Key_Found
+
+	cmp al, 91h ; w
+	je Key_Found
+
+	cmp al, 9Fh ; s
+	je Key_Found
+
+	ret
+
+	Key_Found:
+		mov last_key, al
+	ret
+Update_Last_Key endp
+
 ; Wait_For_Keypress waits for a key to be pressed and then changes the last_key variable
 ; Whenever counter variable is 0, it calls Move_Symbol to move in the direction of the last key pressed
 Wait_For_Keypress proc uses ax bx dx di
@@ -74,13 +96,16 @@ Wait_For_Keypress proc uses ax bx dx di
 		jz No_Key_Pressed
 
 	in al, 60h ; Get keyboard data
-	mov last_key, al
+	call Update_Last_Key
 	jmp Get_Button
 
 	No_Key_Pressed:
 		mov al, last_key
 
 	Get_Button:
+		cmp al, 90h ; q
+		je Quit
+		
 		; if the counter is not 0, then the symbol should not move
 		mov ah, counter
 		cmp ah, 0
@@ -101,9 +126,6 @@ Wait_For_Keypress proc uses ax bx dx di
 
 		cmp al, 9Fh ; s
 		je Move_Down
-
-		cmp al, 90h ; q
-		je Quit
 
 	jmp Wait_For_Keypress
 

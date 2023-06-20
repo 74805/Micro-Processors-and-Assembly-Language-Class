@@ -9,12 +9,12 @@
 
     normal_factor db ?
 
-	score db 0
-	score_a_msg db 'Score is A:  ', '$'
-	score_b_msg db 'Score is B:  ', '$'
-	score_c_msg db 'Score is C:  ', '$'
+	score db 0 ; 1-2 digit number
+	score_a_msg db 'Score is A: ', ?, '$'
+	score_b_msg db 'Score is B: ', ?, '$'
+	score_c_msg db 'Score is C: ', ?, ?, '$'
 
-.stack 1000h
+.stack 100h
 .code
 
 Print_Screen_Black proc uses ax bx cx dx
@@ -240,8 +240,14 @@ Generate_X proc uses ax bx dx di
     ret
 Generate_X endp
 
-Print_Score proc uses ax dx si
-	mov ax, 0 
+Print_Score proc uses ax bx dx si
+	; Set the cursor to the top left corner
+	mov ah, 02h
+	mov bh, 0
+	mov dx, 0
+	int 10h
+
+	mov ah, 0 
     mov al, score
 
 	cmp al, 10d
@@ -271,11 +277,14 @@ Print_Score proc uses ax dx si
 		jmp Print_Score_Message
 
 	Print_C:
-		add al, 30h ; ASCII
+		mov bl, 10d
+		div bl ; First digit in al and second in ah
+		add ax, 3030h ; ASCII
 
 		; Move the score into the message
 		mov si, offset score_c_msg + 12
 		mov [si], al
+		mov [si + 1], ah
 
 		mov dx, offset score_c_msg
 		jmp Print_Score_Message

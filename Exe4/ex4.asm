@@ -4,12 +4,12 @@
 	rows db 25
 	columns db 80
 
-	last_button db ?
+	last_key db 0 ; last key pressed
 
 	last_location dw ?
     last_point_location dw ?
 
-    normal_factor db ?
+    normal_factor db ? ; normal factor for the random number generator
 
 	score db 0 ; 1-2 digit number
 	score_a_msg db 'Score is A: ', ?, '$'
@@ -21,6 +21,7 @@
 .stack 100h
 .code
 
+; Print_Screen_Black clears the screen and sets the background color to black
 Print_Screen_Black proc uses ax bx cx dx
     mov ah, 06h ; Function to clear the screen and set attribute
     xor al, al
@@ -38,6 +39,7 @@ Print_Screen_Black proc uses ax bx cx dx
     ret
 Print_Screen_Black endp
 
+; Print_Symbol prints the symbol (red 'O') in the middle of the screen
 Print_Symbol proc uses ax bx cx di
     ; Print red 'o' in the middle of the screen as the symbol
     mov bl, columns ; Number of columns
@@ -63,24 +65,47 @@ Print_Symbol proc uses ax bx cx di
     ret
 Print_Symbol endp
 
-Key_Pressed proc 
-	
-	cmp al, 9Eh ; a
-	je Move_Left
+; Wait_For_Keypress waits for a key to be pressed and then changes the last_key variable
+; Whenever counter variable is 0, it calls Move_Symbol to move in the direction of the last key pressed
+Wait_For_Keypress proc uses ax bx dx di
+	Loop1:
+		in al, 64h
+		test al, 01h
+		jz No_Key_Pressed
 
-	cmp al, 0A0h ; d
-	je Move_Right
+	in al, 60h ; Get keyboard data
+	mov last_key, al
+	jmp Get_Button
 
-	cmp al, 91h ; w
-	je Move_Up
+	No_Key_Pressed:
+		mov al, last_key
 
-	cmp al, 9Fh ; s
-	je Move_Down
+	Get_Button:
+		; if the counter is not 0, then the symbol should not move
+		mov ah, counter
+		cmp ah, 0
+		jne Loop1
 
-	cmp al, 90h ; q
-	je Quit
+		; Update the counter so that the symbol does not move too fast
+		mov counter, 1
 
-	jmp Loop1
+		; Check if the key pressed is one of the arrow keys or q
+		cmp al, 9Eh ; a
+		je Move_Left
+
+		cmp al, 0A0h ; d
+		je Move_Right
+
+		cmp al, 91h ; w
+		je Move_Up
+
+		cmp al, 9Fh ; s
+		je Move_Down
+
+		cmp al, 90h ; q
+		je Quit
+
+	jmp Wait_For_Keypress
 
     Move_Left:
         ; Print the symbol to the left
@@ -97,7 +122,7 @@ Key_Pressed proc
 		; Move the symbol to the left
 		sub di, 2
 
-		call Move_Symbol
+		jmp Move
 
     Move_Right:
         ; Print the symbol to the right
@@ -115,7 +140,7 @@ Key_Pressed proc
         ; Move the symbol to the right
         add di, 2
 
-        call Move_Symbol
+        jmp Move
 
     Move_Up:
         ; Print the symbol one row up
@@ -135,7 +160,7 @@ Key_Pressed proc
         add bl, bl
         sub di, bx
 
-        call Move_Symbol
+        jmp Move
 
     Move_Down:
         ; Print the symbol one row down
@@ -157,7 +182,30 @@ Key_Pressed proc
         add bl, bl
         add di, bx
 
-        call Move_Symbol
+        jmp Move
+
+	Move:	
+		mov byte ptr es:[di], 'O'
+		mov byte ptr es:[di + 1], 4h ; Attribute for red foreground color on black background
+
+		; Delete the symbol from the previous location
+		mov ax, di
+		mov di, last_location
+		mov byte ptr es:[di], ' '
+
+		; Update the last location
+		mov last_location, ax
+
+        ; Check if the point was captured
+		mov bx, last_point_location
+        cmp ax, bx
+        jne Loop1
+
+		; Update the score
+		inc score
+		call Generate_X
+
+		jmp Loop1
 
     Quit:
 		; Clear the screen
@@ -174,31 +222,10 @@ Key_Pressed proc
 		
 		mov ax, 4c00h
 		int 21h
-Key_Pressed endp
-
-Wait_For_Keypress proc uses ax bx dx di
-	Loop1:
-		in al, 64h
-		test al, 01h
-		jz Loop1
-
-	in al, 60h ; Get keyboard data
-	mov last_button, al
-
-	call Key_Pressed
-
-	; Not_Pressed:
-	; 	; if the counter is zero, move the point in the last direction
-	; 	mov al, counter
-	; 	cmp al, 0
-	; 	jne Loop1
-
-	; 	call Move_Symbol
-
-	; 	jmp Loop1
 		
 Wait_For_Keypress endp
 
+; Move_Symbol moves the symbol in the direction of the last key pressed
 Move_Symbol proc
 	mov byte ptr es:[di], 'O'
 	mov byte ptr es:[di + 1], 4h ; Attribute for red foreground color on black background
@@ -224,6 +251,8 @@ Move_Symbol proc
 
 Move_Symbol endp
 
+; Generate_X generates a new point (red 'X') in a random location on the screen at the 
+; beginning of the game or after the previous point was captured 
 Generate_X proc uses ax bx dx di
     ; Get random number using the system clock
 	Loop2:
@@ -275,6 +304,7 @@ Generate_X proc uses ax bx dx di
     ret
 Generate_X endp
 
+; Print_Score prints the score when quitting the game
 Print_Score proc uses ax bx dx si
 	; Set the cursor to the top left corner
 	mov ah, 02h
@@ -331,8 +361,8 @@ Print_Score proc uses ax bx dx si
 	ret
 Print_Score endp
 
+; New_ISR resets the counter every third time the timer interrupt is called
 New_ISR proc uses ax
-	; Resets the counter every third time
 	inc counter
 
 	mov al, 3h
@@ -346,6 +376,7 @@ New_ISR proc uses ax
 		iret
 New_ISR endp
 
+; Change_IVT updates the timer interrupt vector
 Change_IVT proc uses ax es
 	mov ax, 0h
 	mov es, ax 
@@ -368,6 +399,7 @@ Change_IVT proc uses ax es
 	ret
 Change_IVT endp
 
+; Restore_IVT restores the timer interrupt vector
 Restore_IVT proc uses ax es
 	mov ax, 0h
 	mov es, ax 

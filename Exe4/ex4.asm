@@ -4,6 +4,8 @@
 	rows db 25
 	columns db 80
 
+	last_button db ?
+
 	last_location dw ?
     last_point_location dw ?
 
@@ -13,6 +15,8 @@
 	score_a_msg db 'Score is A: ', ?, '$'
 	score_b_msg db 'Score is B: ', ?, '$'
 	score_c_msg db 'Score is C: ', ?, ?, '$'
+
+	counter db 0
 
 .stack 100h
 .code
@@ -307,6 +311,43 @@ Print_Score proc uses ax bx dx si
 	ret
 Print_Score endp
 
+New_ISR proc uses ax
+	; Resets the counter every third time
+	inc counter
+
+	mov al, 3h
+	cmp al, counter
+	jne Exit
+
+	; Reset the counter
+	mov counter, 0
+
+	Exit:
+		iret
+New_ISR endp
+
+Change_IVT proc
+	mov ax, 0h
+	mov es, ax 
+
+	cli ; Disable interrupts
+
+	; Save the old ISR in an unused IVT entry
+	mov ax, es:[1Ch*4] ; IP
+	mov es:[80h*4], ax
+	mov ax, es:[80h*4 + 2] ; CS
+	mov es:[82h*4 + 2], ax
+
+	; Set the new ISR
+	mov ax, offset New_ISR
+	mov es:[1Ch*4], ax ; IP
+	mov ax, cs
+	mov es:[1Ch*4 + 2], ax ; CS
+
+	sti ; Enable interrupts
+	ret
+Change_IVT endp
+
 START:
     mov ax, @data ; Set up the data segment
 	mov ds, ax
@@ -336,6 +377,8 @@ START:
     mov normal_factor, al
 
 	call Generate_X
+
+	call Change_IVT
 
 	in al, 21h
 	or al, 02h

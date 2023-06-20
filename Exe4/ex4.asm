@@ -97,7 +97,7 @@ Key_Pressed proc
 		; Move the symbol to the left
 		sub di, 2
 
-		jmp Move
+		call Move_Symbol
 
     Move_Right:
         ; Print the symbol to the right
@@ -115,7 +115,7 @@ Key_Pressed proc
         ; Move the symbol to the right
         add di, 2
 
-        jmp Move
+        call Move_Symbol
 
     Move_Up:
         ; Print the symbol one row up
@@ -135,7 +135,7 @@ Key_Pressed proc
         add bl, bl
         sub di, bx
 
-        jmp Move
+        call Move_Symbol
 
     Move_Down:
         ; Print the symbol one row down
@@ -157,30 +157,7 @@ Key_Pressed proc
         add bl, bl
         add di, bx
 
-        jmp Move
-
-	Move:	
-		mov byte ptr es:[di], 'O'
-		mov byte ptr es:[di + 1], 4h ; Attribute for red foreground color on black background
-
-		; Delete the symbol from the previous location
-		mov ax, di
-		mov di, last_location
-		mov byte ptr es:[di], ' '
-
-		; Update the last location
-		mov last_location, ax
-
-        ; Check if the point was captured
-		mov bx, last_point_location
-        cmp ax, bx
-        jne Loop1
-
-		; Update the score
-		inc score
-		call Generate_X
-
-		jmp Loop1
+        call Move_Symbol
 
     Quit:
 		; Clear the screen
@@ -209,8 +186,43 @@ Wait_For_Keypress proc uses ax bx dx di
 	mov last_button, al
 
 	call Key_Pressed
+
+	; Not_Pressed:
+	; 	; if the counter is zero, move the point in the last direction
+	; 	mov al, counter
+	; 	cmp al, 0
+	; 	jne Loop1
+
+	; 	call Move_Symbol
+
+	; 	jmp Loop1
 		
 Wait_For_Keypress endp
+
+Move_Symbol proc
+	mov byte ptr es:[di], 'O'
+	mov byte ptr es:[di + 1], 4h ; Attribute for red foreground color on black background
+
+	; Delete the symbol from the previous location
+	mov ax, di
+	mov di, last_location
+	mov byte ptr es:[di], ' '
+
+	; Update the last location
+	mov last_location, ax
+
+	; Check if the point was captured
+	mov bx, last_point_location
+	cmp ax, bx
+	jne Loop1
+
+	; Update the score
+	inc score
+	call Generate_X
+
+	jmp Loop1
+
+Move_Symbol endp
 
 Generate_X proc uses ax bx dx di
     ; Get random number using the system clock

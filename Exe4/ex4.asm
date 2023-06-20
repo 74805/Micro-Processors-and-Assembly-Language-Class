@@ -67,19 +67,19 @@ Wait_For_Keypress proc uses ax bx dx di
 
 	in al, 60h ; Get keyboard data
 
-	cmp al, 1Eh;9Eh ; a
+	cmp al, 9Eh ; a
 	je Move_Left
 
-	cmp al, 20h ;0A0h ; d
+	cmp al, 0A0h ; d
 	je Move_Right
 
-	cmp al, 11h;91h ; w
+	cmp al, 91h ; w
 	je Move_Up
 
-	cmp al, 1Fh;9Fh ; s
+	cmp al, 9Fh ; s
 	je Move_Down
 
-	cmp al, 10h;90h ; q
+	cmp al, 90h ; q
 	je Quit
 
 	jmp Wait_For_Keypress
@@ -185,8 +185,19 @@ Wait_For_Keypress proc uses ax bx dx di
 		jmp Loop1
 
     Quit:
+		; Clear the screen
+		call Print_Screen_Black
+
 		call Print_Score
-        ret
+
+		; Return to DOS
+		in al, 21h
+		and al, 0FDh
+		out 21h, al
+		
+		mov ax, 4c00h
+		int 21h
+		
 Wait_For_Keypress endp
 
 Generate_X proc uses ax bx dx di
@@ -243,11 +254,11 @@ Generate_X endp
 Print_Score proc uses ax bx dx si
 	; Set the cursor to the top left corner
 	mov ah, 02h
-	mov bh, 0
-	mov dx, 0
+	mov bh, 0h
+	mov dx, 0h
 	int 10h
 
-	mov ah, 0 
+	mov ah, 0h 
     mov al, score
 
 	cmp al, 10d
@@ -290,17 +301,13 @@ Print_Score proc uses ax bx dx si
 		jmp Print_Score_Message
 
 	Print_Score_Message:
-		; Print the score message
 		mov ah, 09h
 		int 21h
 
 	ret
 Print_Score endp
 
-
 START:
-    .startup
-
     mov ax, @data ; Set up the data segment
 	mov ds, ax
 
@@ -335,9 +342,4 @@ START:
 	out 21h, al
 	call Wait_For_Keypress
 
-	in al, 21h
-	and al, 0FDh
-	out 21h, al
-
-    .exit
 end START

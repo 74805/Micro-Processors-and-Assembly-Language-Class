@@ -63,14 +63,8 @@ Print_Symbol proc uses ax bx cx di
     ret
 Print_Symbol endp
 
-Wait_For_Keypress proc uses ax bx dx di
-	Loop1:
-		in al, 64h
-		test al, 01h
-		jz Loop1
-
-	in al, 60h ; Get keyboard data
-
+Key_Pressed proc 
+	
 	cmp al, 9Eh ; a
 	je Move_Left
 
@@ -86,7 +80,7 @@ Wait_For_Keypress proc uses ax bx dx di
 	cmp al, 90h ; q
 	je Quit
 
-	jmp Wait_For_Keypress
+	jmp Loop1
 
     Move_Left:
         ; Print the symbol to the left
@@ -194,6 +188,8 @@ Wait_For_Keypress proc uses ax bx dx di
 
 		call Print_Score
 
+		call Restore_IVT
+
 		; Return to DOS
 		in al, 21h
 		and al, 0FDh
@@ -201,6 +197,18 @@ Wait_For_Keypress proc uses ax bx dx di
 		
 		mov ax, 4c00h
 		int 21h
+Key_Pressed endp
+
+Wait_For_Keypress proc uses ax bx dx di
+	Loop1:
+		in al, 64h
+		test al, 01h
+		jz Loop1
+
+	in al, 60h ; Get keyboard data
+	mov last_button, al
+
+	call Key_Pressed
 		
 Wait_For_Keypress endp
 
@@ -326,7 +334,7 @@ New_ISR proc uses ax
 		iret
 New_ISR endp
 
-Change_IVT proc
+Change_IVT proc uses ax es
 	mov ax, 0h
 	mov es, ax 
 
@@ -335,8 +343,8 @@ Change_IVT proc
 	; Save the old ISR in an unused IVT entry
 	mov ax, es:[1Ch*4] ; IP
 	mov es:[80h*4], ax
-	mov ax, es:[80h*4 + 2] ; CS
-	mov es:[82h*4 + 2], ax
+	mov ax, es:[1Ch*4 + 2] ; CS
+	mov es:[80h*4 + 2], ax
 
 	; Set the new ISR
 	mov ax, offset New_ISR
@@ -347,6 +355,22 @@ Change_IVT proc
 	sti ; Enable interrupts
 	ret
 Change_IVT endp
+
+Restore_IVT proc uses ax es
+	mov ax, 0h
+	mov es, ax 
+
+	cli ; Disable interrupts
+
+	; Save the old ISR in an unused IVT entry
+	mov ax, es:[80h*4] ; IP
+	mov es:[1Ch*4], ax
+	mov ax, es:[80h*4 + 2] ; CS
+	mov es:[1Ch*4 + 2], ax
+
+	sti ; Enable interrupts
+	ret
+Restore_IVT endp
 
 START:
     mov ax, @data ; Set up the data segment

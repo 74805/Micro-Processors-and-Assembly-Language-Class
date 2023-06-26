@@ -6,23 +6,88 @@
 .stack 100h
 .code
 
-Print_Sentence proc uses ax si cx
-    ; Every second print one character
+; Prints the sentence, one character at a time, with a 1 second delay between each character
+Print_Sentence proc uses ax bx cx dx si
+    ; Set up the cursor
+    mov dh, 12
+    mov dl, 30
+    mov ah, 02h
+    mov bh, 0
+    int 10h
+
     mov si, offset sentence
+    mov bl, 0Fh
     Loop1:
         ; Print a character
-        
+        mov al, [si]
+        cmp al, '$'
+        je Print_Sentence_end
 
-        ; Delay for 1 second
-        ; cmp - 3 cycles
-        ; loop - 17 cycles
-        ; (20 cycles * 800ns per cycle * 0F424h) = 1 second
-        mov cx, 0F424h
+        mov ah, 09h
+        mov cx, 1
+        int 10h
+
+        inc si
+
+        ; Move cursor
+        inc dl
+        mov ah, 02h
+        int 10h
+
+        ; Wait 1 second
+        mov cx, 0FFFFh
         Loop2:
-            cmp cx, 0
+            push [si]
+            push [si]
+            push [si]
+            push [si]
+            push [si]
+            push [si]
+            push [si]
+            push [si]
+            push [si]
+            push [si]
+            push [si]
+            push [si]
+            push [si]
+            push [si]
+            push [si]
+            push [si]
+            push [si]
+            push [si]
+            push [si]
+            push [si]
+            push [si]
+            push [si]
+            
+            pop [si]
+            pop [si]
+            pop [si]
+            pop [si]
+            pop [si]
+            pop [si]
+            pop [si]
+            pop [si]
+            pop [si]
+            pop [si]
+            pop [si]
+            pop [si]
+            pop [si]
+            pop [si]
+            pop [si]
+            pop [si]
+            pop [si]
+            pop [si]
+            pop [si]
+            pop [si]
+            pop [si]
+            pop [si]
             loop Loop2
+            
+        jmp Loop1
 
-    ret
+    Print_Sentence_end:
+        ret
 Print_Sentence endp
 
 START:

@@ -17,6 +17,7 @@ Print_Sentence proc uses ax bx cx dx di si
     int 10h
 
     mov si, offset sentence
+    mov di, offset speed
     mov dh, 0 ; counter
     mov bl, 8h
     Loop1:
@@ -31,7 +32,6 @@ Print_Sentence proc uses ax bx cx dx di si
 
         inc si
         inc dh
-        add di, 2
 
         ; Move cursor
         inc dl
@@ -50,7 +50,6 @@ Print_Sentence proc uses ax bx cx dx di si
 
         Wait_One_Second:
             push dx
-            mov di, offset speed
             mov dx, [di]
 
             Delay_Loop:
@@ -71,17 +70,35 @@ Print_Sentence proc uses ax bx cx dx di si
                 ;je Poll_Keyboard_end
 
                 cmp al, 'p'
-                ;je Stop
+                je Stop
 
                 Delay_Inner:
                     dec cx
                     jnz Delay_Inner
                 cmp dx, 0
                 jnz Delay_Loop
-            pop dx
+            
+            jmp Finish_Waiting
 
-                
-        jmp Loop1
+            Stop:
+                ; Wait for another 'p'
+                Loop3:
+                    mov ah, 01h
+                    int 16h
+                    jz Loop3
+
+                    mov ah, 00h
+                    int 16h
+
+                    cmp al, 'p'
+                    jne Loop3
+
+                    jmp Finish_Waiting
+
+            Finish_Waiting:
+                pop dx
+                jmp Loop1
+
 
     Print_Sentence_end:
         ret

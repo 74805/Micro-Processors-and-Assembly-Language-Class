@@ -48,6 +48,7 @@ Print_Sentence proc uses ax bx cx dx si
         mov dh, 0
 
         Wait_One_Second:
+            call Poll_Keyboard
             push dx
             mov dx, 1500
             Delay_Loop:
@@ -64,6 +65,38 @@ Print_Sentence proc uses ax bx cx dx si
     Print_Sentence_end:
         ret
 Print_Sentence endp
+
+Poll_Keyboard proc uses ax
+    Loop3:
+        mov ah, 01h
+        int 16h
+        jz Loop3
+
+        mov ah, 00h
+        int 16h
+
+        cmp al, 'w'
+        je Poll_Keyboard_end
+
+        cmp al, 's'
+        je Poll_Keyboard_end
+
+        cmp al, 'p'
+        je Poll_Keyboard_end
+        
+        jmp Loop3
+
+    Fast:
+
+
+    Slow:
+
+
+    Stop:
+
+    Poll_Keyboard_end:
+        .exit
+Poll_Keyboard endp
 
 START:
     .startup

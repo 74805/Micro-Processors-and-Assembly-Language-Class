@@ -48,54 +48,16 @@ Print_Sentence proc uses ax bx cx dx si
         mov dh, 0
 
         Wait_One_Second:
-            mov cx, 0FFFFh
-            Loop2:
-                push [si]
-                push [si]
-                push [si]
-                push [si]
-                push [si]
-                push [si]
-                push [si]
-                push [si]
-                push [si]
-                push [si]
-                push [si]
-                push [si]
-                push [si]
-                push [si]
-                push [si]
-                push [si]
-                push [si]
-                push [si]
-                push [si]
-                push [si]
-                push [si]
-                push [si]
-                
-                pop [si]
-                pop [si]
-                pop [si]
-                pop [si]
-                pop [si]
-                pop [si]
-                pop [si]
-                pop [si]
-                pop [si]
-                pop [si]
-                pop [si]
-                pop [si]
-                pop [si]
-                pop [si]
-                pop [si]
-                pop [si]
-                pop [si]
-                pop [si]
-                pop [si]
-                pop [si]
-                pop [si]
-                pop [si]
-                loop Loop2
+            push dx
+            mov dx, 1500
+            Delay_Loop:
+                mov cx, 1000
+                Delay_Inner:
+                    dec cx
+                    jnz Delay_Inner
+                dec dx
+                jnz Delay_Loop
+            pop dx
                 
         jmp Loop1
 

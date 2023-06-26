@@ -2,12 +2,13 @@
 
 .data
     sentence db "The quick brown fox jumps over the lazy dog$"
+    speed dw 0F000h
 
 .stack 100h
 .code
 
 ; Prints the sentence, one character at a time, with a 1 second delay between each character, and background color changing every 4 characters
-Print_Sentence proc uses ax bx cx dx si
+Print_Sentence proc uses ax bx cx dx di si
     ; Set up the cursor
     mov dh, 12
     mov dl, 20
@@ -48,17 +49,37 @@ Print_Sentence proc uses ax bx cx dx si
         mov dh, 0
 
         Wait_One_Second:
-            call Poll_Keyboard
             push dx
-            mov dx, 1500
+            mov di, offset speed
+            mov dx, [di]
+
             Delay_Loop:
-                mov cx, 1000
+                dec dx
+                mov cx, 20d
+
+                mov ah, 01h
+                int 16h
+                jz Delay_Inner
+
+                mov ah, 00h
+                int 16h
+
+                cmp al, 'w'
+                ;je Poll_Keyboard_end
+
+                cmp al, 's'
+                ;je Poll_Keyboard_end
+
+                cmp al, 'p'
+                ;je Stop
+
                 Delay_Inner:
                     dec cx
                     jnz Delay_Inner
-                dec dx
+                cmp dx, 0
                 jnz Delay_Loop
             pop dx
+
                 
         jmp Loop1
 
@@ -66,37 +87,55 @@ Print_Sentence proc uses ax bx cx dx si
         ret
 Print_Sentence endp
 
-Poll_Keyboard proc uses ax
-    Loop3:
-        mov ah, 01h
-        int 16h
-        jz Loop3
+; Poll_Keyboard proc uses ax si
+;     mov si, offset speed
+;     mov cx, [si]
+;     Loop3:
+;         dec cx
 
-        mov ah, 00h
-        int 16h
+;         mov ah, 01h
+;         int 16h
+;         jz Check_cx
 
-        cmp al, 'w'
-        je Poll_Keyboard_end
+;         mov ah, 00h
+;         int 16h
 
-        cmp al, 's'
-        je Poll_Keyboard_end
+;         cmp al, 'w'
+;         je Poll_Keyboard_end
 
-        cmp al, 'p'
-        je Poll_Keyboard_end
+;         cmp al, 's'
+;         je Poll_Keyboard_end
+
+;         cmp al, 'p'
+;         je Stop
         
-        jmp Loop3
+;         Check_cx:
+;             cmp cx, 0
+;             jne Loop3
+;             ret
 
-    Fast:
+;     Fast:
 
 
-    Slow:
+;     Slow:
 
 
-    Stop:
+;     Stop:
+;         ; Wait for another 'p'
+;         Loop4:
+;             mov ah, 01h
+;             int 16h
+;             jz Loop4
 
-    Poll_Keyboard_end:
-        .exit
-Poll_Keyboard endp
+;             mov ah, 00h
+;             int 16h
+
+;             cmp al, 'p'
+;             jne Loop4
+
+;     Poll_Keyboard_end:
+;         ret
+; Poll_Keyboard endp
 
 START:
     .startup

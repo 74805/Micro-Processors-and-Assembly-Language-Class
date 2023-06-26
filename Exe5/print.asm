@@ -6,10 +6,22 @@
 .stack 100h
 .code
 
-Print_Sentence proc uses ax dx
-    mov dx, offset sentence
-    mov ah, 09h
-    int 21h
+Print_Sentence proc uses ax si cx
+    ; Every second print one character
+    mov si, offset sentence
+    Loop1:
+        ; Print a character
+        
+
+        ; Delay for 1 second
+        ; cmp - 3 cycles
+        ; loop - 17 cycles
+        ; (20 cycles * 800ns per cycle * 0F424h) = 1 second
+        mov cx, 0F424h
+        Loop2:
+            cmp cx, 0
+            loop Loop2
+
     ret
 Print_Sentence endp
 

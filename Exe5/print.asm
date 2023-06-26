@@ -84,9 +84,9 @@ Print_Sentence proc uses ax bx cx dx di si
                 ; Make printing twice as fast
                 mov ax, [di]
                 ; Check if speed is already at max
-                cmp ax, 0FFh
+                cmp ax, 0FF00h
                 je Delay_Inner
-                
+
                 shr ax, 1
                 mov [di], ax
                 jmp Delay_Inner

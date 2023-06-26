@@ -84,31 +84,35 @@ Print_Sentence proc uses ax bx cx dx di si
             Fast:
                 ; Make printing twice as fast
                 mov ax, [di]
-                ; Check if speed cannot be multiplied by 2
-                and ax, 8000h
-                cmp ax, 8000h
-                je Max_Speed
 
-                mov ax, [di]
-                shr ax, 1
+                ; Check if speed is maximum
+                cmp ax, 1
+                je Delay_Inner
+
+                shr dx, 1
+                shr ax, 1 
                 mov [di], ax
                 jmp Delay_Inner
-
-                Max_Speed:
-                    mov [di], 0FFFFh
-                    jmp Delay_Inner
 
             Slow:
                 ; Make printing twice as slow
                 mov ax, [di]
+
                 ; Check if speed is minimum
-                cmp ax, 1
-                je Delay_Inner
+                and ax, 8000h
+                cmp ax, 8000h
+                je Min_Speed
 
                 mov ax, [di]
                 shl ax, 1
                 mov [di], ax
+                shl dx, 1
                 jmp Delay_Inner
+                
+                Min_Speed:
+                    mov [di], 0FFFFh
+                    mov dx, 0FFFFh
+                    jmp Delay_Inner
 
             Stop:
                 ; Wait for another 'p'

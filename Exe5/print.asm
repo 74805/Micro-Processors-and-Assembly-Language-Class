@@ -6,6 +6,7 @@
 
 .stack 100h
 .code
+extern Change_IVT:near
 
 ; Prints the sentence, one character at a time, with a 1 second delay between each character, and background color changing every 4 characters
 Print_Sentence proc uses ax bx cx dx di si
@@ -21,6 +22,14 @@ Print_Sentence proc uses ax bx cx dx di si
     mov dh, 0 ; counter
     mov bl, 8h
     Loop1:
+        ; Move cursor
+        inc dl
+        push dx
+        mov dh, 12
+        mov ah, 02h
+        int 10h
+        pop dx
+
         ; Print a character
         mov al, [si]
         cmp al, '$'
@@ -32,14 +41,6 @@ Print_Sentence proc uses ax bx cx dx di si
 
         inc si
         inc dh
-
-        ; Move cursor
-        inc dl
-        push dx
-        mov dh, 12
-        mov ah, 02h
-        int 10h
-        pop dx
 
         ; Switch background color every 4 characters
         cmp dh, 4
@@ -141,8 +142,11 @@ START:
     mov ax, @data ; Set up the data segment
 	mov ds, ax
 
-    call Print_Sentence
+    mov bx, offset Print
+    jmp Change_IVT
 
+    Print:
+        call Print_Sentence
 	
     .exit
 end

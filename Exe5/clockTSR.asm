@@ -13,10 +13,11 @@ START:
     mov ds, ax
     push ax
 
+    mov bx, offset Finish
     jmp Change_IVT
 
     ; Print_Time prints the time to the screen
-    Print_Time proc uses si ax bx di dx
+    Print_Time proc uses ax bx dx
         ; Set the cursor position
         mov dh, 17
         mov dl, 40
@@ -142,6 +143,7 @@ START:
         mov es:[1Ch*4 + 2], ax ; CS
 
         sti ; Enable interrupts
+        jmp bx
 	
     Finish:
         pop ax

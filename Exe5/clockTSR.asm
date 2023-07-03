@@ -11,7 +11,6 @@ time db '00:00:000$'
 START:
     mov ax, cs
     mov ds, ax
-    push ax
 
     mov bx, offset Finish
     jmp Change_IVT
@@ -125,6 +124,8 @@ START:
 
     ; Update the timer interrupt vector
     Change_IVT:
+        push cs
+
         mov ax, 0h
         mov es, ax 
 
@@ -143,11 +144,11 @@ START:
         mov es:[1Ch*4 + 2], ax ; CS
 
         sti ; Enable interrupts
+        mov dx, offset Finish
         jmp bx
 	
     Finish:
         pop ax
         mov cs, ax
-        mov dx, offset Finish
         int 27h
 end START

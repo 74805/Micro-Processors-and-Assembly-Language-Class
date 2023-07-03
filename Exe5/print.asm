@@ -146,7 +146,6 @@ START:
     jmp Change_IVT
 
     Print:
-        pop dx
         call Print_Sentence
         jmp dx
 	

@@ -174,9 +174,8 @@ START:
         jmp Change_IVT
 
     Print:
-        pop dx
         call Print_Sentence
-        jmp dx
+        jmp dx ; Jump to Exit or Finish
 	
     Exit:
         mov ax, 4C00h

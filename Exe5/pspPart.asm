@@ -165,7 +165,7 @@ START:
         loop Loop2
 
     ; If the command line is "/NOCLK", jump to Print
-    mov dx, offset Exit
+    mov dx, offset Exit ; After printing it jumps to the exit pointer in dx (if using clock it will do int 27)
     push dx
     jmp Print
 

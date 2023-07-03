@@ -19,8 +19,8 @@ START:
     ; Print_Time prints the time to the screen
     Print_Time proc uses ax bx dx
         ; Set the cursor position
-        mov dh, 17
-        mov dl, 40
+        mov dh, 11
+        mov dl, 27
         mov ah, 02h
         mov bh, 0
         int 10h

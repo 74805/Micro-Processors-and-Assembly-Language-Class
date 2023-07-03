@@ -1,9 +1,10 @@
-.model small
+.model tiny
 
 .data
     time db '00:00:000$'
 .stack 100h
 .code
+
 
 ; New_ISR updates the time
 New_ISR proc uses si ax bx dx
@@ -134,11 +135,8 @@ Print_Time endp
 START:
     .startup
 
-    mov ax, @data ; Set up the data segment
-	mov ds, ax
-
-    mov ax, 0b800h
-    mov es, ax
+    mov ax, cs
+    mov ds, ax
 
     call Change_IVT ; Update the timer interrupt vector
 	
@@ -149,4 +147,4 @@ START:
         cmp al, 'q'
         jne Loop2
     .exit
-end START
+end

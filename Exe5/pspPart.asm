@@ -3,6 +3,7 @@
 .data
     sentence db "The quick brown fox jumps over the lazy dog$"
     speed dw 0FFh
+    command_line_string db "/NOCLK$"
 
 .stack 100h
 .code
@@ -137,18 +138,47 @@ Print_Sentence proc uses ax bx cx dx di si
 Print_Sentence endp
 
 START:
-    .startup
+
+    mov ax, ds
+    mov es, ax ; Point es to the PSP
 
     mov ax, @data ; Set up the data segment
 	mov ds, ax
 
-    mov bx, offset Print
-    jmp Change_IVT
+    ; Check command line
+    mov cl, es:[80h] ; Get the length of the command line string including the '$' character
+    cmp cl, 7
+    jne With_Clock
+
+    ; Check if the command line is string "/NOCLK"
+    mov si, 82h ; Point si to the command line string (after the space)
+    mov di, offset command_line_string
+    mov cx, 6
+
+    Loop2:
+        mov al, es:[si]
+        mov bl, [di]
+        cmp al, bl
+        jne With_Clock
+        inc si
+        inc di
+        loop Loop2
+
+    ; If the command line is "/NOCLK", jump to Print
+    mov dx, offset Exit
+    push dx
+    jmp Print
+
+    With_Clock:
+        mov bx, offset Print
+        jmp Change_IVT
 
     Print:
         pop dx
         call Print_Sentence
         jmp dx
 	
-    .exit
-end
+    Exit:
+        mov ax, 4C00h
+        int 21h
+end START

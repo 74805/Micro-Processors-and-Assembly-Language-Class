@@ -5,6 +5,7 @@ org 100h
 
 jmp START
 
+public Change_IVT
 time db '00:00:000$'
 
 START:
